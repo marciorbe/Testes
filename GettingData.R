@@ -28,3 +28,17 @@ dateDownloaded <- date()
 library(xlsx)
 cameraData <- read.xlsx("./data/cameras.xlsx",sheetIndex=1,header=TRUE)
 head(cameraData)
+
+## Quiz 1
+if (!file.exists("data")){
+  dir.create("data")
+}
+destfile <- "./data/data.csv"
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06hid.csv"
+download.file( fileUrl, destfile = destfile, method = "curl" )
+data <- read.table(destfile,sep=",",header=TRUE)
+head(data)
+## 01 - How many properties are worth $1,000,000 or more?
+
+
+
