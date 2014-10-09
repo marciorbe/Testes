@@ -39,6 +39,14 @@ download.file( fileUrl, destfile = destfile, method = "curl" )
 data <- read.table(destfile,sep=",",header=TRUE)
 head(data)
 ## 01 - How many properties are worth $1,000,000 or more?
-
-
+sum(data[["VAL"]]==24,na.rm=TRUE)
+## 03
+destfile <- "./data/ngap.xlsx" 
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FDATA.gov_NGAP.xlsx"
+download.file( fileUrl, destfile = destfile, method = "curl" )
+data <- read.xlsx(destfile,sheetIndex=1,header=TRUE)
+## 04
+destfile <- "./data/restaurants.xml" 
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Frestaurants.xml"
+download.file( fileUrl, destfile = destfile, method = "curl" )
 
