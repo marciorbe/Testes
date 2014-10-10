@@ -153,12 +153,27 @@ head(data)
 ## 01 - How many properties are worth $1,000,000 or more?
 sum(data[["VAL"]]==24,na.rm=TRUE)
 ## 03
-destfile <- "./data/ngap.xlsx" 
+destfile <- "./data/ngap.xlsx"
 fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2FDATA.gov_NGAP.xlsx"
 download.file( fileUrl, destfile = destfile, method = "curl" )
-data <- read.xlsx(destfile,sheetIndex=1,header=TRUE)
+colIndex <- 7:15
+rowIndex <- 18:23
+dat <- read.xlsx(destfile,sheetIndex=1,colIndex=colIndex,rowIndex=rowIndex)
+sum(dat$Zip*dat$Ext,na.rm=T) 
 ## 04
 destfile <- "./data/restaurants.xml" 
 fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Frestaurants.xml"
 download.file( fileUrl, destfile = destfile, method = "curl" )
+doc <- xmlTreeParse(fileUrl,useInternal=TRUE)
+doc <- xmlTreeParse(destfile,useInternal=TRUE)
+## 05
+require(data.table)
+dt <- fread(".data/micro.csv")
+
+system.time({mean(DT[DT$SEX==1,]$pwgtp15); mean(DT[DT$SEX==2,]$pwgtp15)})
+system.time(tapply(DT$pwgtp15,DT$SEX,mean))
+system.time(mean(DT$pwgtp15,by=DT$SEX))
+system.time(DT[,mean(pwgtp15),by=SEX])
+system.time({rowMeans(DT)[DT$SEX==1]; rowMeans(DT)[DT$SEX==2]})
+system.time(sapply(split(DT$pwgtp15,DT$SEX),mean))
 
