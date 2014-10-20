@@ -177,3 +177,235 @@ system.time(DT[,mean(pwgtp15),by=SEX])
 system.time({rowMeans(DT)[DT$SEX==1]; rowMeans(DT)[DT$SEX==2]})
 system.time(sapply(split(DT$pwgtp15,DT$SEX),mean))
 
+## Reading mySQL
+
+## Step 1 - Install MySQL
+## Step 2 - Install RMySQL
+## On a Mac: install.packages("RMySQL")
+## On Windows:
+## Official instructions - http://biostat.mc.vanderbilt.edu/wiki/Main/RMySQL (may be useful for Mac/UNIX users as well)
+## Potentially useful guide - http://www.ahschulz.de/2013/07/23/installing-rmysql-under-windows/
+
+## Connecting and listing databases
+ucscDb <- dbConnect(MySQL(),user="genome", host="genome-mysql.cse.ucsc.edu")
+result <- dbGetQuery(ucscDb,"show databases;"); 
+dbDisconnect(ucscDb);
+result
+
+## Connecting to hg19 and listing tables
+hg19 <- dbConnect(MySQL(),user="genome", db="hg19", host="genome-mysql.cse.ucsc.edu")
+allTables <- dbListTables(hg19)
+length(allTables)
+allTables[1:5]
+
+## Get dimensions of a specific table
+dbListFields(hg19,"affyU133Plus2")
+dbGetQuery(hg19, "select count(*) from affyU133Plus2")
+
+## Read from the table
+affyData <- dbReadTable(hg19, "affyU133Plus2")
+head(affyData)
+
+## Select a specific subset
+query <- dbSendQuery(hg19, "select * from affyU133Plus2 where misMatches between 1 and 3")
+affyMis <- fetch(query); 
+quantile(affyMis$misMatches)
+affyMisSmall <- fetch(query,n=10); dbClearResult(query);
+dim(affyMisSmall)
+
+## Don't forget to close the connection!
+dbDisconnect(hg19)
+
+## Further resources
+## RMySQL vignette http://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf
+## List of commands http://www.pantz.org/software/mysql/mysqlcommands.html
+## Do not, do not, delete, add or join things from ensembl. Only select.
+## In general be careful with mysql commands
+## A nice blog post summarizing some other commands http://www.r-bloggers.com/mysql-and-r/
+
+## Reading HDF5
+
+## HDF5
+## Used for storing large data sets
+## Supports storing a range of data types
+## Heirarchical data format
+## groups containing zero or more data sets and metadata
+## Have a group header with group name and list of attributes
+## Have a group symbol table with a list of objects in group
+## datasets multidmensional array of data elements with metadata
+## Have a header with name, datatype, dataspace, and storage layout
+## Have a data array with the data
+## http://www.hdfgroup.org/
+
+## R HDF5 package
+source("http://bioconductor.org/biocLite.R")
+biocLite("rhdf5")
+library(rhdf5)
+created = h5createFile("example.h5")
+created
+
+## This will install packages from Bioconductor http://bioconductor.org/, primarily used for genomics but also has good "big data" packages
+## Can be used to interface with hdf5 data sets.
+## This lecture is modeled very closely on the rhdf5 tutorial that can be found here http://www.bioconductor.org/packages/release/bioc/vignettes/rhdf5/inst/doc/rhdf5.pdf
+
+## Create groups
+created = h5createGroup("example.h5","foo")
+created = h5createGroup("example.h5","baa")
+created = h5createGroup("example.h5","foo/foobaa")
+h5ls("example.h5")
+
+## Write to groups
+A = matrix(1:10,nr=5,nc=2)
+h5write(A, "example.h5","foo/A")
+B = array(seq(0.1,2.0,by=0.1),dim=c(5,2,2))
+attr(B, "scale") <- "liter"
+h5write(B, "example.h5","foo/foobaa/B")
+h5ls("example.h5")
+
+## Write a data set
+df = data.frame(1L:5L,seq(0,1,length.out=5), c("ab","cde","fghi","a","s"), stringsAsFactors=FALSE)
+h5write(df, "example.h5","df")
+h5ls("example.h5")
+
+## Reading data
+readA = h5read("example.h5","foo/A")
+readB = h5read("example.h5","foo/foobaa/B")
+readdf= h5read("example.h5","df")
+readA
+
+## Writing and reading chunks
+h5write(c(12,13,14),"example.h5","foo/A",index=list(1:3,1))
+h5read("example.h5","foo/A")
+
+## Notes and further resources
+## hdf5 can be used to optimize reading/writing from disc in R
+## The rhdf5 tutorial:
+## http://www.bioconductor.org/packages/release/bioc/vignettes/rhdf5/inst/doc/rhdf5.pdf
+## The HDF group has informaton on HDF5 in general http://www.hdfgroup.org/HDF5/
+
+
+## Reading data from the web
+
+## Webscraping
+## Webscraping: Programatically extracting data from the HTML code of websites.
+
+## It can be a great way to get data How Netflix reverse engineered Hollywood
+## Many websites have information you may want to programaticaly read
+## In some cases this is against the terms of service for the website
+## Attempting to read too many pages too quickly can get your IP address blocked
+## http://en.wikipedia.org/wiki/Web_scraping
+
+## Getting data off webpages - readLines()
+con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
+htmlCode = readLines(con)
+close(con)
+htmlCode
+
+## Parsing with XML
+library(XML)
+url <- "http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en"
+html <- htmlTreeParse(url, useInternalNodes=T)
+xpathSApply(html, "//title", xmlValue)
+xpathSApply(html, "//td[@id='col-citedby']", xmlValue)
+
+## GET from the httr package
+library(httr); 
+html2 = GET(url)
+content2 = content(html2,as="text")
+parsedHtml = htmlParse(content2,asText=TRUE)
+xpathSApply(parsedHtml, "//title", xmlValue)
+
+## Accessing websites with passwords
+pg1 = GET("http://httpbin.org/basic-auth/user/passwd")
+pg1
+
+## http://cran.r-project.org/web/packages/httr/httr.pdf
+
+## Accessing websites with passwords
+pg2 = GET("http://httpbin.org/basic-auth/user/passwd", authenticate("user","passwd"))
+pg2
+names(pg2)
+
+## Using handles
+google = handle("http://google.com")
+pg1 = GET(handle=google,path="/")
+pg2 = GET(handle=google,path="search")
+## http://cran.r-project.org/web/packages/httr/httr.pdf
+
+## Notes and further resources
+## R Bloggers has a number of examples of web scraping http://www.r-bloggers.com/?s=Web+Scraping
+## The httr help file has useful examples http://cran.r-project.org/web/packages/httr/httr.pdf
+## See later lectures on APIs
+
+## Reading data from APIs
+
+Accessing Twitter from R
+
+myapp = oauth_app("twitter", key="yourConsumerKeyHere", secret="yourConsumerSecretHere")
+sig = sign_oauth1.0( myapp, token = "yourTokenHere", token_secret = "yourTokenSecretHere")
+homeTL = GET("https://api.twitter.com/1.1/statuses/home_timeline.json", sig)
+
+Converting the json object
+json1 = content(homeTL)
+json2 = jsonlite::fromJSON(toJSON(json1))
+json2[1,1:4]
+
+Reading from other sources
+Question 1
+Register an application with the Github API here https://github.com/settings/applications. 
+Access the API to get information on your instructors repositories (hint: this is the url you want "https://api.github.com/users/jtleek/repos"). 
+Use this data to find the time that the datasharing repo was created. 
+What time was it created? 
+This tutorial may be useful (https://github.com/hadley/httr/blob/master/demo/oauth2-github.r). 
+You may also need to run the code in the base R package and not R studio.
+
+Question 2
+The sqldf package allows for execution of SQL commands on R data frames. 
+We will use the sqldf package to practice the queries we might send with the dbSendQuery command in RMySQL. 
+Download the American Community Survey data and load it into an R object called
+ acs
+https://d396qusza40orc.cloudfront.net/getdata%2Fdata%2Fss06pid.csv 
+
+Which of the following commands will select only the data for the probability weights pwgtp1 with ages less than 50?
+sqldf("select pwgtp1 from acs")
+sqldf("select * from acs where AGEP < 50 and pwgtp1")
+sqldf("select * from acs")
+sqldf("select pwgtp1 from acs where AGEP < 50")
+
+Question 3
+Using the same data frame you created in the previous problem, what is the equivalent function to unique(acs$AGEP)
+sqldf("select distinct AGEP from acs")
+sqldf("select AGEP where unique from acs")
+sqldf("select unique * from acs")
+sqldf("select distinct pwgtp1 from acs")
+
+Question 4
+How many characters are in the 10th, 20th, 30th and 100th lines of HTML from this page: 
+
+http://biostat.jhsph.edu/~jleek/contact.html 
+
+(Hint: the nchar() function in R may be helpful)
+45 31 7 25
+43 99 8 6
+45 31 7 31
+45 0 2 2
+43 99 7 25
+45 31 2 25
+45 92 7 2
+
+Question 5
+Read this data set into R and report the sum of the numbers in the fourth of the nine columns. 
+
+https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for 
+
+Original source of the data: http://www.cpc.ncep.noaa.gov/data/indices/wksst8110.for 
+
+(Hint this is a fixed width file format)
+36.5
+35824.9
+32426.7
+28893.3
+222243.1
+101.83
+
+
