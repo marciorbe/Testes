@@ -339,18 +339,22 @@ pg2 = GET(handle=google,path="search")
 
 ## Reading data from APIs
 
-Accessing Twitter from R
+## Accessing Twitter from R
 
 myapp = oauth_app("twitter", key="yourConsumerKeyHere", secret="yourConsumerSecretHere")
 sig = sign_oauth1.0( myapp, token = "yourTokenHere", token_secret = "yourTokenSecretHere")
 homeTL = GET("https://api.twitter.com/1.1/statuses/home_timeline.json", sig)
 
-Converting the json object
+## Converting the json object
 json1 = content(homeTL)
 json2 = jsonlite::fromJSON(toJSON(json1))
 json2[1,1:4]
 
-Reading from other sources
+## Reading from other sources
+
+
+## Quiz 2
+
 Question 1
 Register an application with the Github API here https://github.com/settings/applications. 
 Access the API to get information on your instructors repositories (hint: this is the url you want "https://api.github.com/users/jtleek/repos"). 
@@ -358,6 +362,12 @@ Use this data to find the time that the datasharing repo was created.
 What time was it created? 
 This tutorial may be useful (https://github.com/hadley/httr/blob/master/demo/oauth2-github.r). 
 You may also need to run the code in the base R package and not R studio.
+
+token: c7297bca4d4ad3e2a9ab173130599242db0f1701
+Client ID: bec7b43ad8481033bbc0
+Client Secret: 3a013b8483a52af8423e83ad3a865dbbace56aaf
+
+myapp <- oauth_app("MyFirstApp","bec7b43ad8481033bbc0", "3a013b8483a52af8423e83ad3a865dbbace56aaf")
 
 Question 2
 The sqldf package allows for execution of SQL commands on R data frames. 
