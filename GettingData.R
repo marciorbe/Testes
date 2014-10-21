@@ -357,7 +357,8 @@ json2[1,1:4]
 
 Question 1
 Register an application with the Github API here https://github.com/settings/applications. 
-Access the API to get information on your instructors repositories (hint: this is the url you want "https://api.github.com/users/jtleek/repos"). 
+Access the API to get information on your instructors repositories 
+(hint: this is the url you want "https://api.github.com/users/jtleek/repos"). 
 Use this data to find the time that the datasharing repo was created. 
 What time was it created? 
 This tutorial may be useful (https://github.com/hadley/httr/blob/master/demo/oauth2-github.r). 
@@ -367,7 +368,46 @@ token: c7297bca4d4ad3e2a9ab173130599242db0f1701
 Client ID: bec7b43ad8481033bbc0
 Client Secret: 3a013b8483a52af8423e83ad3a865dbbace56aaf
 
+con = url("https://api.github.com/users/jtleek/repos")
+code = readLines(con)
+close(con)
+
+library(httr)
+oauth_endpoints("github")
 myapp <- oauth_app("MyFirstApp","bec7b43ad8481033bbc0", "3a013b8483a52af8423e83ad3a865dbbace56aaf")
+github_token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+gtoken <- config(token = github_token)
+req <- GET("https://api.github.com/users/jtleek/repos", gtoken)
+stop_for_status(req)
+content(req)
+
+library(httr)
+
+# 1. Find OAuth settings for github:
+#    http://developer.github.com/v3/oauth/
+oauth_endpoints("github")
+
+# 2. Register an application at https://github.com/settings/applications;
+#    Use any URL you would like for the homepage URL (http://github.com is fine)
+#    and http://localhost:1410 as the callback url
+#
+#    Insert your client ID and secret below - if secret is omitted, it will
+#    look it up in the GITHUB_CONSUMER_SECRET environmental variable.
+myapp <- oauth_app("github", "56b637a5baffac62cad9")
+
+# 3. Get OAuth credentials
+github_token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+
+# 4. Use API
+gtoken <- config(token = github_token)
+req <- GET("https://api.github.com/rate_limit", gtoken)
+stop_for_status(req)
+content(req)
+
+# OR:
+req <- with_config(gtoken, GET("https://api.github.com/rate_limit"))
+stop_for_status(req)
+content(req)
 
 Question 2
 The sqldf package allows for execution of SQL commands on R data frames. 
@@ -380,22 +420,20 @@ Which of the following commands will select only the data for the probability we
 sqldf("select pwgtp1 from acs")
 sqldf("select * from acs where AGEP < 50 and pwgtp1")
 sqldf("select * from acs")
-sqldf("select pwgtp1 from acs where AGEP < 50")
+=> sqldf("select pwgtp1 from acs where AGEP < 50")
 
 Question 3
 Using the same data frame you created in the previous problem, what is the equivalent function to unique(acs$AGEP)
-sqldf("select distinct AGEP from acs")
+=> sqldf("select distinct AGEP from acs")
 sqldf("select AGEP where unique from acs")
 sqldf("select unique * from acs")
 sqldf("select distinct pwgtp1 from acs")
 
 Question 4
-How many characters are in the 10th, 20th, 30th and 100th lines of HTML from this page: 
-
+How many characters are in the 10th, 20th, 30th and 100th lines of HTML from this page:
 http://biostat.jhsph.edu/~jleek/contact.html 
-
 (Hint: the nchar() function in R may be helpful)
-45 31 7 25
+=> 45 31 7 25
 43 99 8 6
 45 31 7 31
 45 0 2 2
@@ -403,19 +441,34 @@ http://biostat.jhsph.edu/~jleek/contact.html
 45 31 2 25
 45 92 7 2
 
+con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
+code = readLines("http://biostat.jhsph.edu/~jleek/contact.html")
+code[c(10,20,30,100)]
+lapply(code[c(10,20,30,100)],nchar)
+
 Question 5
-Read this data set into R and report the sum of the numbers in the fourth of the nine columns. 
-
+Read this data set into R and report the sum of the numbers in the fourth of the nine columns.
 https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for 
-
 Original source of the data: http://www.cpc.ncep.noaa.gov/data/indices/wksst8110.for 
-
 (Hint this is a fixed width file format)
 36.5
 35824.9
-32426.7
+=>32426.7
 28893.3
 222243.1
 101.83
 
+data <- read.fwf(file="./data/q5.for", widths=c(10,9,4,9,4,9,4,9,4))
+sum(data[,4])
 
+destfile <- "./data/Q05.for"
+
+## Downloading file
+fileUrl <- "https://d396qusza40orc.cloudfront.net/getdata%2Fwksst8110.for"
+download.file( fileUrl, destfile = destfile, method = "curl" )
+read.fwf(file="./data/q5.for", widths=c(10,9,4,9,4,9,4,9,4))
+read.fwf(file="./data/q5.for", widths=c(10,9,4,9,4,9,4,9,4), header = FALSE, sep = "\t",
+         skip = 0, row.names, col.names, n = -1,
+         buffersize = 2000, fileEncoding = "", ...)
+
+setwd("C:/Ferramentas/WorkSpaces/Coursera")
